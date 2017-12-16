@@ -29,7 +29,7 @@ def departure_monitor(station):
         time = hours+':'+minutes
         station_name = departures_tree.find('itdDepartureMonitorRequest').find('itdOdv').find('itdOdvName').find('odvNameElem').text
 
-        output.append("${font}${font Poiret One:size=15}"+station_name.encode("UTF8")+"${font}${font DejaVu Sans:size=10}")
+        output.append("${font}${font Poiret One:size=15}"+station_name.encode("UTF8")+"${font}${font DejaVu Sans Mono:size=10}")
         #writer.voffset(50).offset(12).color('white').write().newline()
 
         count = 1
@@ -42,9 +42,10 @@ def departure_monitor(station):
             if count > 6:
                 break
             #writer.voffset(12).offset(12).color('white').write(line + " " + destination.encode("UTF8") + " " + abfahrt).newline()
-            output.append('{:>2}'.format(line)  +" "+ '{:<35}'.format(destination.encode("UTF8")) +" "+'{:>3}'.format(abfahrt))
-            print '{:<2}'.format(line) + '{:<26}'.format(destination.encode("UTF8")) +'{:>3}'.format(abfahrt)
+            output.append("\\" + '{:>2}'.format(line)  +" "+ '{:<30}'.format(destination.encode("UTF8")) +" "+'{:>3}'.format(abfahrt))
+
     except Exception, exc:
+        print "Something went wrong!"
         print exc
 
     return output
@@ -70,14 +71,14 @@ station_ids = get_station_db()
 printout = []
 for item in station_ids:
     printout += departure_monitor(item)
-print printout
+#print printout
 with open(expanduser("~")+"/.conky_departure_monitor","w+") as conkyrc:
-    conkyrc.write("conky.config = {background=true,double_buffer=true,no_buffers=true,imlib_cache_size=10,draw_shades=false,draw_outline=false,use_xft=true,xftalpha=1,font='Droid Sans:size=10',text_buffer_size=300,override_utf8_locale=true,gap_x=0,gap_y=0,alignment='middle_right',own_window=true,own_window_type='dock',own_window_transparent=true,own_window_hints='undecorated,below,sticky,skip_taskbar,skip_pager',own_window_argb_visual=true,own_window_argb_value=0,}conky.text = [[ ${font Droid Sans:size=14}           << DEPARTURES >>${font}${font Poiret One:size=15}\n-------------------------------------------")
+    conkyrc.write("conky.config = {background=true,double_buffer=true,no_buffers=true,imlib_cache_size=10,draw_shades=false,draw_outline=false,use_xft=true,xftalpha=1,font='Droid Sans:size=10',text_buffer_size=300,override_utf8_locale=true,gap_x=0,gap_y=0,alignment='middle_right',own_window=true,own_window_type='desktop',own_window_transparent=true,own_window_hints='undecorated,below,sticky,skip_taskbar,skip_pager',own_window_argb_visual=true,own_window_argb_value=0,}conky.text = [[ ${font Droid Sans:size=14}           << DEPARTURES >>${font}${font Poiret One:size=15}\n------------------------------------------")
 
 writer = ConkyWriter(open(expanduser("~")+"/.conky_departure_monitor","a"))
 for item in printout:
     writer.newline()
     writer.voffset(12).offset(12).color('white').write(item)
-with open(expanduser("~")+"/.conky_departure_monitor","a") as conkyrc:
-    conkyrc.write("{font}]]")
-#Popen(["conky", "-c",expanduser("~")+"/.conky_departure_monitor"])
+writer.newline()
+writer.newline()
+writer.voffset(12).offset(12).color('white').write("${font}]]")
