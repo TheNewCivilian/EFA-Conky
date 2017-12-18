@@ -11,18 +11,21 @@ import re, os
 import signal
 
 def handler(signum, frame):
+    """Handler for function timeout"""
     print "REQUEST TIMED OUT :("
     raise Exception("")
 
 def departure_monitor(station):
+    """Returns departure monitor information by station ID"""
     output = []
     signal.alarm(30)
     try:
+        # First request to get session ID
         response = urllib2.urlopen('http://www.efa-bw.de/nvbw/XML_DM_REQUEST?sessionID=0&type_dm=any&name_dm='+str(station)+'&itdDateTimeArr=dep')
         xml = response.read()
         tree = ET.fromstring(xml)
         sid = tree.get('sessionID') #sessionID to get departure Data
-        #Secound Request
+        # Secound Request to get monitor data
         response2 = urllib2.urlopen('http://www.efa-bw.de/nvbw/XML_DM_REQUEST?sessionID='+sid+'&requestID=1&dmLineSelectionAll=1')
         xml2 = response2.read()
         departures_tree = ET.fromstring(xml2)
@@ -34,35 +37,26 @@ def departure_monitor(station):
             minutes = '0'+minutes
         time = hours+':'+minutes
         station_name = departures_tree.find('itdDepartureMonitorRequest').find('itdOdv').find('itdOdvName').find('odvNameElem').text
-        #print station_name
         if station_name is None:
             station_name = departures_tree.find('itdDepartureMonitorRequest').find('itdOdv').find('itdOdvName').find('odvNameInput').text
         output.append("${font}${font Poiret One:size=15}"+station_name.encode("UTF8")+"${font}${font DejaVu Sans Mono:size=10}")
-        #writer.voffset(50).offset(12).color('white').write().newline()
-
+        # count init
         count = 1
-        #print departures_tree.find('itdDepartureMonitorRequest').find('itdDepartureList')
-
         for itdDeparture in departures_tree.find('itdDepartureMonitorRequest').find('itdDepartureList'):
             abfahrt_class = ""
             abfahrt = itdDeparture.get('countdown')
             line = itdDeparture.find('itdServingLine').get('number')
             destination = itdDeparture.find('itdServingLine').get('direction')
+            # Break if 5 entries written
             if count > 5:
                 break
-            #writer.voffset(12).offset(12).color('white').write(line + " " + destination.encode("UTF8") + " " + abfahrt).newline()
-            #Print Line just letters if string is longer than 3 symbols
-            #count special characters in destination an add to printlengh
-            #print destination.encode("UTF8")
             dest_offset = 30
-            if u"\u00FC" in destination or u"\u00E4" in destination or u"\u00F6" in destination:
+            # Correct if german "Umlaute" appear in Station Name
+            if u"\u00FC" in destination or u"\u00E4" in destination or u"\u00F6" in destination or u"\u00DF" in destination:
                 dest_offset += 1
             if int(abfahrt)-1 >= 0:
                 count += 1
                 output.append("\\- " + '{:<4}'.format(line[:3])  +" "+ ('{:<'+str(dest_offset)+'}').format(destination.encode("UTF8")) +" "+'{:>3}'.format(str(int(abfahrt)-1)))
-        if count < 5:
-            output.append("\Does not support standard EFA!")
-
     except Exception, exc:
         print "Something went wrong!"
         print exc
@@ -70,16 +64,16 @@ def departure_monitor(station):
     return output
 
 def get_station_db():
-    router_mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})", Popen(["arp", "-a"], stdout=PIPE).communicate()[0]).groups()[0]
-    wireless = Wireless()
-    ss_id = wireless.current()
-    if os.path.dirname(__file__) is not '':
-        db = TinyDB(os.path.dirname(__file__)+'/../db/db.json')
-    else:
-        db = TinyDB('../db/db.json')
-    station_query = Query()
-
+    """Returns all station IDs linked to network"""
     try:
+        router_mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})", Popen(["arp", "-a"], stdout=PIPE).communicate()[0]).groups()[0]
+        wireless = Wireless()
+        ss_id = wireless.current()
+        if os.path.dirname(__file__) is not '':
+            db = TinyDB(os.path.dirname(__file__)+'/../db/db.json')
+        else:
+            db = TinyDB('../db/db.json')
+        station_query = Query()
         result = db.search((station_query.SSID == ss_id)&(station_query.MAC == router_mac))
         stationlist = []
         for item in result:
@@ -88,21 +82,25 @@ def get_station_db():
     except:
         return []
 
+# Init Timout signal
 signal.signal(signal.SIGALRM, handler)
+
+# Get requested station IDs from Database
 station_ids = get_station_db()
+
+# Get Stationdata
 printout = []
 for item in station_ids:
     printout += departure_monitor(item)
-#print printout
-writer = ConkyWriter()
-#
-# with open(expanduser("~")+"/.conky_departure_monitor","w+") as conkyrc:
-#     conkyrc.write("conky.config = {background=true,double_buffer=true,no_buffers=true,imlib_cache_size=10,draw_shades=false,draw_outline=false,use_xft=true,xftalpha=1,font='Droid Sans:size=10',text_buffer_size=300,override_utf8_locale=true,gap_x=0,gap_y=0,alignment='middle_right',own_window=true,own_window_type='desktop',own_window_transparent=true,own_window_hints='undecorated,below,sticky,skip_taskbar,skip_pager',own_window_argb_visual=true,own_window_argb_value=0,}conky.text = [[ ${font Droid Sans:size=14}           << DEPARTURES >>${font}${font Poiret One:size=15}\n------------------------------------------")
 
-#writer = ConkyWriter(open(expanduser("~")+"/.conky_departure_monitor","a"))
+# Open output Stream
+writer = ConkyWriter()
+
+# Print every row with information from the station printout
 for item in printout:
     writer.voffset(12).offset(12).color('white').write(item)
     writer.newline()
+
+# Print two newlines to prevent content cutoff
 writer.newline()
 writer.newline()
-#writer.voffset(12).offset(12).color('white').write("${font}]]")
