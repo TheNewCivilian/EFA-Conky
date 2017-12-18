@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from xml.etree import ElementTree as ET
 from subprocess import Popen, PIPE
 from wireless import Wireless
@@ -7,10 +8,15 @@ from os.path import expanduser
 import urllib2
 import netifaces
 import re, os
+import signal
 
+def handler(signum, frame):
+    print "REQUEST TIMED OUT :("
+    raise Exception("")
 
 def departure_monitor(station):
     output = []
+    signal.alarm(30)
     try:
         response = urllib2.urlopen('http://www.efa-bw.de/nvbw/XML_DM_REQUEST?sessionID=0&type_dm=any&name_dm='+str(station)+'&itdDateTimeArr=dep')
         xml = response.read()
@@ -42,13 +48,18 @@ def departure_monitor(station):
             abfahrt = itdDeparture.get('countdown')
             line = itdDeparture.find('itdServingLine').get('number')
             destination = itdDeparture.find('itdServingLine').get('direction')
-            count += 1
-            if count > 6:
+            if count > 5:
                 break
             #writer.voffset(12).offset(12).color('white').write(line + " " + destination.encode("UTF8") + " " + abfahrt).newline()
             #Print Line just letters if string is longer than 3 symbols
             #count special characters in destination an add to printlengh
-            output.append("\\- " + '{:<4}'.format(line[:4])  +" "+ '{:<30}'.format(destination.encode("UTF8")) +" "+'{:>3}'.format(abfahrt))
+            #print destination.encode("UTF8")
+            dest_offset = 30
+            if u"\u00FC" in destination or u"\u00E4" in destination or u"\u00F6" in destination:
+                dest_offset += 1
+            if int(abfahrt)-1 >= 0:
+                count += 1
+                output.append("\\- " + '{:<4}'.format(line[:3])  +" "+ ('{:<'+str(dest_offset)+'}').format(destination.encode("UTF8")) +" "+'{:>3}'.format(str(int(abfahrt)-1)))
         if count < 5:
             output.append("\Does not support standard EFA!")
 
@@ -77,6 +88,7 @@ def get_station_db():
     except:
         return []
 
+signal.signal(signal.SIGALRM, handler)
 station_ids = get_station_db()
 printout = []
 for item in station_ids:

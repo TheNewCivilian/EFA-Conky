@@ -1,0 +1,46 @@
+conky.config = {
+-------------------------------------
+--  Generic Settings
+-------------------------------------
+
+background=true,
+double_buffer=true,
+no_buffers=true,
+imlib_cache_size=10,
+
+draw_shades=false,
+draw_outline=false,
+
+-------------------------------------
+--  Text Settings
+-------------------------------------
+
+use_xft=true,
+xftalpha=1,
+font='Droid Sans:size=10',
+text_buffer_size=300,
+override_utf8_locale=true,
+
+-------------------------------------
+--  Window Specifications
+-------------------------------------
+gap_x=10,
+gap_y=0,
+alignment='middle_right',
+
+own_window=true,
+own_window_type='desktop',
+own_window_transparent=true,
+own_window_hints='undecorated,below,sticky,skip_taskbar,skip_pager',
+
+own_window_argb_visual=true,
+own_window_argb_value=0
+}
+
+conky.text = [[
+${font Droid Sans:size=14}
+              << DEPARTURES >>${font}${font Poiret One:size=15}
+----------------------------------------------
+${execpi 30 efaconky preview}
+
+${font}]]
