@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 from xml.etree import ElementTree as ET
 from subprocess import Popen, PIPE
-from wireless import Wireless
 from tinydb import TinyDB, Query
 from conkyutil.writer import ConkyWriter
 from os.path import expanduser
+from getRouterMacAdress import *
 import urllib2
-import netifaces
 import re, os
 import signal
 
@@ -48,7 +47,7 @@ def departure_monitor(station):
             line = itdDeparture.find('itdServingLine').get('number')
             destination = itdDeparture.find('itdServingLine').get('direction')
             # Break if 5 entries written
-            if count > 5:
+            if abfahrt < 30 || count > 15:
                 break
             dest_offset = 30
             # Correct if german "Umlaute" appear in Station Name
@@ -66,15 +65,13 @@ def departure_monitor(station):
 def get_station_db():
     """Returns all station IDs linked to network"""
     try:
-        router_mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})", Popen(["arp", "-a"], stdout=PIPE).communicate()[0]).groups()[0]
-        wireless = Wireless()
-        ss_id = wireless.current()
+        router_mac = getRouterMacAdress()
         if os.path.dirname(__file__) is not '':
             db = TinyDB(os.path.dirname(__file__)+'/../db/db.json')
         else:
             db = TinyDB('../db/db.json')
         station_query = Query()
-        result = db.search((station_query.SSID == ss_id)&(station_query.MAC == router_mac))
+        result = db.search((station_query.MAC == router_mac))
         stationlist = []
         for item in result:
             stationlist.append(item['Station'])

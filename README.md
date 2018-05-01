@@ -2,7 +2,7 @@
 
 General:
 -------
-This conky provides you with the departure monitor of a linked station. The link exists between your network SSID and Router-Mac adress. So the shown station data depends on where you are and you have the right station displayed at the right place without GPS use.
+This conky provides you with the departure monitor of a linked station. The link exists between your Router-Mac adress. So the shown station data depends on where you are and you have the right station displayed at the right place without GPS use.
 
 Setup & Configuration:
 ---------
@@ -24,13 +24,13 @@ You can use `./install.py all` to auto install dependencies.
 
 Conky:  `sudo apt-get install conky`
 
+Net-Tool: `sudo apt-get install net-tool`
+
 Conkyutil: `pip install conkyutil`
 
 Tinydb: `pip install tinydb`
 
 Netifaces: `pip install netifaces`
-
-Wirelsess: `pip install wireless`
 
 Lxml: `pip install lxml`
 
