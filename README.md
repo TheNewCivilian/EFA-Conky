@@ -24,7 +24,7 @@ You can use `./install.py all` to auto install dependencies.
 
 Conky:  `sudo apt-get install conky`
 
-Net-Tool: `sudo apt-get install net-tool`
+Net-Tool: `sudo apt-get install net-tools`
 
 Conkyutil: `pip install conkyutil`
 
