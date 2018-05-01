@@ -47,7 +47,7 @@ def departure_monitor(station):
             line = itdDeparture.find('itdServingLine').get('number')
             destination = itdDeparture.find('itdServingLine').get('direction')
             # Break if 5 entries written
-            if abfahrt < 30 || count > 15:
+            if int(abfahrt) > 30 or count > 15:
                 break
             dest_offset = 30
             # Correct if german "Umlaute" appear in Station Name

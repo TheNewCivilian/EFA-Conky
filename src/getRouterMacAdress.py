@@ -10,5 +10,3 @@ def getRouterMacAdress():
     s = pid.communicate()[0]
     mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})", s).groups()[0]
     return mac
-
-print getRouterMacAdress()
